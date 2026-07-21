@@ -1,0 +1,48 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: expense-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/expense_db
+    username: expense_user
+    password: expense_pass
+
+  jpa:
+    hibernate:
+      # validate, not update/create, schema.sql owns the schema.
+      # Using DDL auto-generation across services with an event contract
+      # between them is how you get silent drift; keep schema changes explicit.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+
+  sql:
+    init:
+      mode: always
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        # Ensures the producer doesn't reorder retries on the wire,
+        # matters because we depend on per-group ordering downstream.
+        max.in.flight.requests.per.connection: 5
+        enable.idempotence: true
+        # JsonSerializer stamps the payload class's fully-qualified name in a
+        # header by default. That name (com.fairshare.expense.event....) doesn't
+        # exist on ledger-service's classpath, since it keeps its own copy of
+        # the event under com.fairshare.ledger.event.
+        spring.json.type.mapping: expenseCreated:com.fairshare.expense.event.ExpenseCreatedEvent
+
+app:
+  kafka:
+    topic:
+      expense-events: expense-events

@@ -1,0 +1,52 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: ledger-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5434/ledger_db
+    username: ledger_user
+    password: ledger_pass
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+
+  sql:
+    init:
+      mode: always
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: ledger-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: com.fairshare.ledger.event
+        # Type headers are disabled on the producer side (see expense-service's
+        # application.yml), since the producer's class name wouldn't resolve on
+        # this classpath. Target type is set explicitly here instead, this is
+        # the direct cost of not sharing a library module between services.
+        spring.json.type.mapping: expenseCreated:com.fairshare.ledger.event.ExpenseCreatedEvent,settlementRecorded:com.fairshare.ledger.event.SettlementRecordedEvent
+        # ErrorHandlingDeserializer wraps JsonDeserializer so a malformed
+        # payload becomes a recoverable exception the error handler can
+        # route to the DLT, instead of killing the consumer thread outright.
+    listener:
+      ack-mode: record
+
+app:
+  kafka:
+    topic:
+      expense-events: expense-events
+      expense-events-dlt: expense-events.DLT
+      settlement-events: settlement-events
+      settlement-events-dlt: settlement-events.DLT

@@ -1,0 +1,43 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: settlement-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5435/settlement_db
+    username: settlement_user
+    password: settlement_pass
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+
+  sql:
+    init:
+      mode: always
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        max.in.flight.requests.per.connection: 5
+        enable.idempotence: true
+        # See expense-service's application.yml for why a logical type id is
+        # used instead of add.type.headers=false or the default FQCN header,
+        # ledger-service's consumer needs to tell this event type apart from
+        # ExpenseCreatedEvent on the same consumer group.
+        spring.json.type.mapping: settlementRecorded:com.fairshare.settlement.event.SettlementRecordedEvent
+
+app:
+  kafka:
+    topic:
+      settlement-events: settlement-events
