@@ -14,11 +14,11 @@ design decision, not a contrived one.
 
 ## Services
 
-| Service             | Responsibility                                                                        | Owns                       |
-|---------------------|---------------------------------------------------------------------------------------|----------------------------|
-| `expense-service`   | Groups, expenses, splits. Publishes `expense-events`.                                 | Postgres (`expense_db`)    |
-| `ledger-service`    | Consumes `expense-events`, maintains pairwise balances, computes debt simplification. | Postgres (`ledger_db`)     |
-| `settlement-service | Records settle-up payments between two users. Publishes`settlement-events`            | Postgres (`settlement_db`) |
+| Service              | Responsibility                                                                        | Owns                       |
+|----------------------|---------------------------------------------------------------------------------------|----------------------------|
+| `expense-service`    | Groups, expenses, splits. Publishes `expense-events`.                                 | Postgres (`expense_db`)    |
+| `ledger-service`     | Consumes `expense-events`, maintains pairwise balances, computes debt simplification. | Postgres (`ledger_db`)     |
+| `settlement-service` | Records settle-up payments between two users. Publishes`settlement-events`            | Postgres (`settlement_db`) |
 
 ## Event flow
 
